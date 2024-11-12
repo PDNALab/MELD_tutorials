@@ -10,7 +10,7 @@ Before performing the MD simulations, it is recommended to first minimize the sy
 
 The MELD files will be generated using the _setup.py_ file. To discuss the script, we can divide it into the following sections:
 
-1. MD parameters
+### MD Parameters
    
 ```
 N_REPLICAS = 30
@@ -20,7 +20,7 @@ BLOCK_SIZE = 50
 
 This block sets the parameters for the REMD simulations. _N_REPLICAS_ is the number of replica ladders, _N_STEPS_ is the total step of simulation, and _BLOCK_SIZE_ dictates how often MELD would save the MD trajectories.
 
-2. CPI Restraints
+### CPI Restraints
 
 For this example, the folding is guided by the following insights: proteins form a hydrophobic core, and beta-strands can form hydrogen bonds with other strands. We also have a third restraint based on the insight that proteins have to be compact to fold. For insight 1, we'll have to first define the hydrophobic residues:
 
@@ -159,7 +159,7 @@ def get_dist_restraints_strand_pair(filename, s, scaler, ramp, seq):
     return dists
 ```
 
-3. Set-up
+### Set-up
 
 Once we have set up these functions, we can them call them to generate the MELD files.
 ```python
@@ -189,7 +189,7 @@ def setup_system():
 ```
 This block generates the AMBER topology for both the protein and the solvent, and defines the timestep (_use_big_timestep_ being enabled as True implies we are using a timestep of 3.5 fs). This also defines the temperature along the replica ladder. We use a geometric scaler for the temperature between replicas 1 to 9 with the range of 300 K to 550 K. For replicas 10 and beyond, the temperature is constant at 550 K.
 
-In contrast to temperature, we only scale the restraints from replicas 12 to 30. We use a nonlinear scaler for the distance which is enforces maximum restraints at replica 12 and zero restraints at replica 30. We also define here the accuracy of the collections. For hydrophobic pairing, we only enforce 1.2 * N_{h} contacts where N_{h} is the number of hydrophobic residues. Strand pairing, on the other hand, only enforces 0.45 * N_{e} restraints where N_{e} is the number of residues predicted to be a beta-strand.
+In contrast to temperature, we only scale the restraints from replicas 12 to 30. We use a nonlinear scaler for the distance which enforces maximum restraints at replica 12 and zero restraints at replica 30. We also define here the accuracy of the collections. For hydrophobic pairing, we only enforce 1.2 * N<sub>h</sub> contacts where N<sub>h</sub> is the number of hydrophobic residues. Strand pairing, on the other hand, only enforces 0.45 * N<sub>e</sub> restraints where N<sub>e</sub> is the number of residues predicted to be a beta-strand.
 
 ```python
     #
@@ -213,4 +213,51 @@ In contrast to temperature, we only scale the restraints from replicas 12 to 30.
     #
     dists = get_dist_restraints_strand_pair('strand_pair.dat', s, scaler, ramp, seq)
     s.restraints.add_selectively_active_collection(dists, int(0.45*active))
+```
+
+### Replica Exchange
+
+The blocks specify some options for REMD. Since we used _big_timestep_, the 14286 value for the timesteps indicates that we are attempting exchanges between the replicas every 50 ps. One exchange attempt corresponds to one REMD step. For this example, we are doing 20000 steps which is equivalent to 1000 ns of MD simulation.
+
 ```python
+    # create the options
+    options = meld.RunOptions(
+        timesteps = 14286,
+        minimize_steps = 20000,
+        min_mc = sched,
+        param_mcmc_steps=200
+    )
+```
+
+Other options for REMD are found in this block. It is in our best interest to allow more exchange attempts during the simulation. The _n_trials_ parameter controls this; here, we perform 48×48 attempts to exchange adjacent replicas.
+
+```python
+    # create a store
+    store = vault.DataStore(gen_state(s,0), N_REPLICAS, s.get_pdb_writer(), block_size=BLOCK_SIZE)  # why i need gen_state(s,0)? doubtful
+    store.initialize(mode='w')
+    store.save_system(s)
+    store.save_run_options(options)
+
+    # create and store the remd_runner
+    l = ladder.NearestNeighborLadder(n_trials=48 * 48)
+    policy_1 = adaptor.AdaptationPolicy(2.0, 50, 50)
+    a = adaptor.EqualAcceptanceAdaptor(n_replicas=N_REPLICAS, adaptation_policy=policy_1, min_acc_prob=0.02)
+
+    remd_runner = remd.leader.LeaderReplicaExchangeRunner(N_REPLICAS, max_steps=N_STEPS, ladder=l, adaptor=a)
+    store.save_remd_runner(remd_runner)
+
+    # create and store the communicator
+    c = comm.MPICommunicator(s.n_atoms, N_REPLICAS, timeout=60000)
+    store.save_communicator(c)
+
+    # create and save the initial states
+    states = [gen_state(s, i) for i in range(N_REPLICAS)]
+    store.save_states(states, 0)
+
+    # save data_store
+    store.save_data_store()
+```
+
+## Analysis
+
+The _setup.py_ can be executed to generate the MELD files which are inside the Data folder. To run the simulation, we can submit a SLURM job using the _run.slurm_ file. After the simulation is completed, the trajectories can be generated using the _extract_trajs.slurm_ file.
