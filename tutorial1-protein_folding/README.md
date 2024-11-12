@@ -29,7 +29,7 @@ hydrophobes = 'AILMFPWV'
 hydrophobes_res = ['ALA','ILE','LEU','MET','PHE','PRO','TRP','VAL']
 ```
 
-Insight 2, on the other hand, depends on the provided secondary structure information. Hydrogen bonds, in this case, is only defined for residues that do not belong in the same strand. From these two information, we can then generate the _hydrophobe.dat_ and _strand_pair.dat_ files which contain the atoms that will form hydrophobic and strand pairings.
+Insight 2, on the other hand, depends on the provided secondary structure information. Hydrogen bonds, in this case, is only defined for residues that do not belong in the same strand. From these two information, we can then generate the _hydrophobe.dat_ and _strand_pair.dat_ files which contain the atoms that will form hydrophobic and strand pairings, respectively.
 
 ```python
 def create_hydrophobes(s,group_1=np.array([]),group_2=np.array([]),CO=True):
@@ -106,7 +106,7 @@ def generate_strand_pairs(s,sse,subset=np.array([]),CO=True):
                         f.write('\n')
 ```
 
-These files will only generate the files. To convert these to distance restraints and python blocks, we need the following functions. These are flat-bottom restraints where no energy penalty is added between r2 and r3. Since strand pairing is guided by hydrogen bonds, we enfore stronger contacts for these restraints (i.e., flat until 3.5 A only compared to 5 A for hydrophobes).
+These files will only generate text files for debugging purposes. To convert these to distance restraints and python blocks, we need the following functions. These define flat-bottom restraints where no energy penalty is added between r2 and r3. Since strand pairing is guided by hydrogen bonds, we enfore stronger contacts for these restraints (i.e., flat until 3.5 A only compared to 5 A for hydrophobes).
 
 ```python
 def get_dist_restraints_hydrophobe(filename, s, scaler, ramp, seq):
@@ -260,4 +260,4 @@ Other options for REMD are found in this block. It is in our best interest to al
 
 ## Analysis
 
-The _setup.py_ can be executed to generate the MELD files which are inside the Data folder. To run the simulation, we can submit a SLURM job using the _run.slurm_ file. After the simulation is completed, the trajectories can be generated using the _extract_trajs.slurm_ file.
+The _setup.py_ can be executed to the Data folder which contains the MELD files. To run the simulation, we can submit a SLURM job using the _run.slurm_ file. After the simulation is completed, the trajectories can be generated using the _extract_trajs.slurm_ file.
