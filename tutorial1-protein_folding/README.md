@@ -26,7 +26,7 @@ hydrophobes = 'AILMFPWV'
 hydrophobes_res = ['ALA','ILE','LEU','MET','PHE','PRO','TRP','VAL']
 ```
 Insight 2, on the other hand, depends on the provided secondary structure information. Hydrogen bonds, in this case, is only defined for residues that do not belong in the same strand. From these two information, we can then generate the _hydrophobe.dat_ and _strand_pair.dat_ files which contains the atoms that will form hydrophobic and strand pairings.
-```
+```python
 def create_hydrophobes(s,group_1=np.array([]),group_2=np.array([]),CO=True):
     hy_rest=open('hydrophobe.dat','w')
     atoms = {"ALA":['CA','CB'],
