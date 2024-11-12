@@ -11,9 +11,9 @@ Before performing the MD simulations, it is recommended to first minimize the sy
 The MELD files will be generated using the setup.py file. To discuss the script, we can divide it into the following sections:
 
 1. MD parameters
-
+```
 N_REPLICAS = 30
 N_STEPS = 20000
 BLOCK_SIZE = 50
-
+```
 This block sets the parameters for the REMD simulations. 
