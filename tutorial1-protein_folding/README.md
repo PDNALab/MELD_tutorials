@@ -20,7 +20,7 @@ This block sets the parameters for the REMD simulations. _N_REPLICAS_ is the num
 
 2. CPI Restraints
 
-For this example, the folding is guided by two insights: (1) proteins form a hydrophobic core, and (2) beta-strands can form hydrogen bonds with other strands. We also have a third restraint based on the insight that proteins have to be compact to fold. For insight 1, we'll have to first define the hydrophobic residues:
+For this example, the folding is guided by the following insights: proteins form a hydrophobic core, and beta-strands can form hydrogen bonds with other strands. We also have a third restraint based on the insight that proteins have to be compact to fold. For insight 1, we'll have to first define the hydrophobic residues:
 ```
 hydrophobes = 'AILMFPWV'
 hydrophobes_res = ['ALA','ILE','LEU','MET','PHE','PRO','TRP','VAL']
