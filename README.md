@@ -6,6 +6,3 @@ This repository contains tutorials for three MELDxMD applications
 2. Modelling protein-protein complexes using NMR chemical shift perturbation data
 3. Competitive binding simulations between two binders
 
-.. code-block:: python
-
-    def setup_system():
