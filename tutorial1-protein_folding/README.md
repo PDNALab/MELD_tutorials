@@ -11,21 +11,26 @@ Before performing the MD simulations, it is recommended to first minimize the sy
 The MELD files will be generated using the _setup.py_ file. To discuss the script, we can divide it into the following sections:
 
 1. MD parameters
+   
 ```
 N_REPLICAS = 30
 N_STEPS = 20000
 BLOCK_SIZE = 50
 ```
+
 This block sets the parameters for the REMD simulations. _N_REPLICAS_ is the number of replica ladders, _N_STEPS_ is the total step of simulation, and _BLOCK_SIZE_ dictates how often MELD would save the MD trajectories.
 
 2. CPI Restraints
 
 For this example, the folding is guided by the following insights: proteins form a hydrophobic core, and beta-strands can form hydrogen bonds with other strands. We also have a third restraint based on the insight that proteins have to be compact to fold. For insight 1, we'll have to first define the hydrophobic residues:
+
 ```
 hydrophobes = 'AILMFPWV'
 hydrophobes_res = ['ALA','ILE','LEU','MET','PHE','PRO','TRP','VAL']
 ```
-Insight 2, on the other hand, depends on the provided secondary structure information. Hydrogen bonds, in this case, is only defined for residues that do not belong in the same strand. From these two information, we can then generate the _hydrophobe.dat_ and _strand_pair.dat_ files which contains the atoms that will form hydrophobic and strand pairings.
+
+Insight 2, on the other hand, depends on the provided secondary structure information. Hydrogen bonds, in this case, is only defined for residues that do not belong in the same strand. From these two information, we can then generate the _hydrophobe.dat_ and _strand_pair.dat_ files which contain the atoms that will form hydrophobic and strand pairings.
+
 ```python
 def create_hydrophobes(s,group_1=np.array([]),group_2=np.array([]),CO=True):
     hy_rest=open('hydrophobe.dat','w')
@@ -99,4 +104,57 @@ def generate_strand_pairs(s,sse,subset=np.array([]),CO=True):
                         f.write('{} {} {} {}\n'.format(res_i, 'N', res_j, 'O'))
                         f.write('{} {} {} {}\n'.format(res_i, 'O', res_j, 'N'))
                         f.write('\n')
+```
+
+These files will only generate the files. To convert these to distance restraints and python blocks, we need the following functions. These are flat-bottom restraints where no energy penalty is added between r2 and r3. Since strand pairing is guided by hydrogen bonds, we enfore stronger contacts (i.e., flat until 3.5 A only compared to 5 A for hydrophobes).
+
+```python
+def get_dist_restraints_hydrophobe(filename, s, scaler, ramp, seq):
+    dists = []
+    rest_group = []
+    lines = open(filename).read().splitlines()
+    lines = [line.strip() for line in lines]
+    for line in lines:
+        if not line:
+            dists.append(s.restraints.create_restraint_group(rest_group, 1))
+            rest_group = []
+        else:
+            cols = line.split()
+            i = int(cols[0])-1
+            name_i = cols[1]
+            j = int(cols[2])-1
+            name_j = cols[3]
+
+            rest = s.restraints.create_restraint('distance', scaler, ramp,
+                                                 r1=0.0*u.nanometer, r2=0.0*u.nanometer, r3=0.5*u.nanometer, r4=0.7*u.nanometer,
+                                                 k=250*u.kilojoule_per_mole/u.nanometer **2,
+                                                 atom1=s.index.atom(i,name_i, expected_resname=seq[i][-3:]),
+                                                 atom2=s.index.atom(j,name_j, expected_resname=seq[j][-3:]))
+            rest_group.append(rest)
+    return dists
+
+def get_dist_restraints_strand_pair(filename, s, scaler, ramp, seq):
+    dists = []
+    rest_group = []
+    lines = open(filename).read().splitlines()
+    lines = [line.strip() for line in lines]
+    for line in lines:
+        if not line:
+            dists.append(s.restraints.create_restraint_group(rest_group, 1))
+            rest_group = []
+        else:
+            cols = line.split()
+            i = int(cols[0])-1
+            name_i = cols[1]
+            j = int(cols[2])-1
+            name_j = cols[3]
+            #
+
+            rest = s.restraints.create_restraint('distance', scaler, ramp,
+                                                 r1=0.0*u.nanometer, r2=0.0*u.nanometer, r3=0.35*u.nanometer, r4=0.55*u.nanometer,
+                                                 k=250*u.kilojoule_per_mole/u.nanometer **2,
+                                                 atom1=s.index.atom(i,name_i, expected_resname=seq[i][-3:]),
+                                                 atom2=s.index.atom(j,name_j, expected_resname=seq[j][-3:]))
+            rest_group.append(rest)
+    return dists
 ```
