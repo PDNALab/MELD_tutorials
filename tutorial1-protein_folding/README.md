@@ -106,7 +106,7 @@ def generate_strand_pairs(s,sse,subset=np.array([]),CO=True):
                         f.write('\n')
 ```
 
-These files will only generate the files. To convert these to distance restraints and python blocks, we need the following functions. These are flat-bottom restraints where no energy penalty is added between r2 and r3. Since strand pairing is guided by hydrogen bonds, we enfore stronger contacts (i.e., flat until 3.5 A only compared to 5 A for hydrophobes).
+These files will only generate the files. To convert these to distance restraints and python blocks, we need the following functions. These are flat-bottom restraints where no energy penalty is added between r2 and r3. Since strand pairing is guided by hydrogen bonds, we enfore stronger contacts for these restraints (i.e., flat until 3.5 A only compared to 5 A for hydrophobes).
 
 ```python
 def get_dist_restraints_hydrophobe(filename, s, scaler, ramp, seq):
@@ -158,3 +158,33 @@ def get_dist_restraints_strand_pair(filename, s, scaler, ramp, seq):
             rest_group.append(rest)
     return dists
 ```
+
+3. Set-up
+
+Once we have set up these functions, we can them call them to generate the MELD files.
+```python
+def setup_system():
+    
+    # load the sequence
+    sequence = parse.get_sequence_from_AA1(filename='sequence.dat')
+    n_res = len(sequence.split())
+
+    # build the system
+    p = meld.AmberSubSystemFromPdbFile('protein_min.pdb')
+    build_options = meld.AmberOptions(
+      forcefield="ff14sbside",
+      implicit_solvent_model = 'gbNeck2',
+      use_big_timestep = True,
+      cutoff = 1.8*u.nanometers,
+      remove_com = False,
+      #use_amap = False,
+      enable_amap = False,
+      amap_beta_bias = 1.0,
+    )
+
+
+    builder = meld.AmberSystemBuilder(build_options)
+    s = builder.build_system([p]).finalize()
+    s.temperature_scaler = system.temperature.GeometricTemperatureScaler(0, 0.3, 300.*u.kelvin, 550.*u.kelvin)
+```
+This block generates the AMBER topology for both the protein and the solvent, and defines the timestep (_use_big_timestep_ being enabled as True implies we are using a timestep of 3.5 fs). This also defines the temperature along the replica ladder. We use a geometric scaler for the temperature between replicas 1 to 9 with the range of 300 K to 550 K. For replicas 10 and beyond, the temperature is constant at 550 K.
