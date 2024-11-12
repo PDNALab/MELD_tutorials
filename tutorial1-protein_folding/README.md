@@ -188,3 +188,29 @@ def setup_system():
     s.temperature_scaler = system.temperature.GeometricTemperatureScaler(0, 0.3, 300.*u.kelvin, 550.*u.kelvin)
 ```
 This block generates the AMBER topology for both the protein and the solvent, and defines the timestep (_use_big_timestep_ being enabled as True implies we are using a timestep of 3.5 fs). This also defines the temperature along the replica ladder. We use a geometric scaler for the temperature between replicas 1 to 9 with the range of 300 K to 550 K. For replicas 10 and beyond, the temperature is constant at 550 K.
+
+In contrast to temperature, we only scale the restraints from replicas 12 to 30. We use a nonlinear scaler for the distance which is enforces maximum restraints at replica 12 and zero restraints at replica 30. We also define here the accuracy of the collections. For hydrophobic pairing, we only enforce 1.2 * N_{h} contacts where N_{h} is the number of hydrophobic residues. Strand pairing, on the other hand, only enforces 0.45 * N_{e} restraints where N_{e} is the number of residues predicted to be a beta-strand.
+
+```python
+    #
+    # Setup Scaler
+    #
+    scaler = s.restraints.create_scaler('nonlinear', alpha_min=0.4, alpha_max=1.0, factor=4.0)
+    subset1= np.array(list(range(n_res))) + 1
+    #
+
+
+    create_hydrophobes(s,group_1=subset1,group_2=subset1,CO=False)
+    
+    
+    ##hydrophobic contacts
+    dists = get_dist_restraints_hydrophobe('hydrophobe.dat', s, scaler, ramp, seq)
+    s.restraints.add_selectively_active_collection(dists, int(1.2 * no_hy_res))   
+
+    ##strand pairing
+    sse,active = make_ss_groups(subset=subset1)
+    generate_strand_pairs(s,sse,subset=subset1,CO=False)
+    #
+    dists = get_dist_restraints_strand_pair('strand_pair.dat', s, scaler, ramp, seq)
+    s.restraints.add_selectively_active_collection(dists, int(0.45*active))
+```python
