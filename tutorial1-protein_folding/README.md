@@ -233,7 +233,7 @@ Other options for REMD are found in this block. It is in our best interest to al
 
 ```python
     # create a store
-    store = vault.DataStore(gen_state(s,0), N_REPLICAS, s.get_pdb_writer(), block_size=BLOCK_SIZE)  # why i need gen_state(s,0)? doubtful
+    store = vault.DataStore(gen_state(s,0), N_REPLICAS, s.get_pdb_writer(), block_size=BLOCK_SIZE) 
     store.initialize(mode='w')
     store.save_system(s)
     store.save_run_options(options)
