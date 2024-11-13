@@ -4,7 +4,7 @@ MELD can verify the binding modes of protein-protein complexes. Here, we will us
 
 [Mondal, A.; Swapna, G.; Lopez, M. M.; Klang, L.; Hao, J.; Ma, L.; Roth, M. J.; Montelione, G. T.; Perez, A. Structure Determination of Challenging Protein–Peptide Complexes Combining NMR Chemical Shift Data and Molecular Dynamics Simulations. J. Chem. Inf. Model. 2023, 63, 2058–2072](https://pubs.acs.org/doi/10.1021/acs.jcim.2c01595)
 
-## Pre-MELD
+## Set-up
 
 In addition to minimizing the system, we have three additional steps before executing the _setup.py_ file.
 
@@ -59,7 +59,7 @@ Since we are only testing the binding modes of the protein-protein complex, it i
 
 Our initial conformation should not be biased toward any specific binding mode. To ensure this, the peptide must be at least 30 A away from the receptor. This can be achieved using the change_coor.py script, which shifts the coordinates of all atoms to be 30 A from their positions in the original PDB file.
 
-## Set-up
+## MELD
 
 Discussions of the MELD options can be found in Tutorial 1. Here, we will focus on how the restraints were defined. We have two collections for this simulation -- (1) collections to keep the proteins folded, and (2) collection to drive protein-protein complex formation.
 
