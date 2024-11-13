@@ -1,4 +1,4 @@
-# Protein Folding using CSP
+# Protein Folding using CPI
 
 MELD can fold small proteins using only sequence information (_sequence.dat_) and secondary structure predictions (_ss.dat_). 
 
