@@ -260,4 +260,4 @@ Other options for REMD are found in this block. It is in our best interest to al
 
 ## Analysis
 
-The _setup.py_ can be executed to the Data folder which contains the MELD files. To run the simulation, we can submit a SLURM job using the _run.slurm_ file. After the simulation is completed, the trajectories can be generated using the _extract_trajs.slurm_ file.
+The _setup.py_ can be executed to generate the Data folder which contains the MELD files. To run the simulation, we can submit a SLURM job using the _run.slurm_ file. After the simulation is completed, the trajectories can be generated using the _extract_trajs.slurm_ file.
