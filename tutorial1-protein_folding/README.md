@@ -2,11 +2,11 @@
 
 MELD can fold small proteins using only sequence information (_sequence.dat_) and secondary structure predictions (_ss.dat_). 
 
-## Pre-MELD
+## Set-up
 
 Before performing the MD simulations, it is recommended to first minimize the system either using Monte Carlo minimizer inside MELD or another MD engine. Here, we used AmberTools to both generate the extended structure from the sequence, and minimize it (_tleap.py_).
 
-## Set-up
+## MELD
 
 The MELD files will be generated using the _setup.py_ file. To discuss the script, we can divide it into the following sections:
 
